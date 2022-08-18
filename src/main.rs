@@ -1,11 +1,10 @@
-use std::{env};
-use std::collections::HashMap;
+use std::{env::args, thread::sleep, time::Duration, collections::HashMap};
 
 fn main() {
     //Parse device and flag arguments
     let mut flags: HashMap<String, String> = HashMap::new();
     let mut devs: Vec<String> = vec![];
-    let mut args: Vec<String> = env::args().collect();
+    let mut args: Vec<String> = args().collect();
     args.remove(0); //remove first argument
     while args.len() > 0 {
         if &args[0][0..1] == "-" {
@@ -18,30 +17,32 @@ fn main() {
     for dev in devs {
         let dev_str = dev.as_str();
         match dev_str {
-            "cpu"=>cpu(Some(flags.get("-c").unwrap_or(&"0".to_string()))),
+            "cpu"=>cpu(flags.get("-c")),
             _=>eprintln!("Device: '{}' not supported.", dev_str)
         }
     }
 }
 
-fn cpu(core:Option<&str>) {
+fn cpu(core:Option<&String>) {
     use sysinfo::{System, SystemExt, CpuExt, CpuRefreshKind};
     let mut s = System::new();
-    s.refresh_cpu_specifics(CpuRefreshKind::everything());
-    s.refresh_cpu_specifics(CpuRefreshKind::everything());
-    match core {
-        Some(n)=>{
-            let cpu_len: usize = s.cpus().len();
-            let n_usize = n.parse::<usize>().unwrap();
+    s.refresh_cpu_specifics(CpuRefreshKind::new().with_cpu_usage());
+    s.refresh_cpu_specifics(CpuRefreshKind::new().with_cpu_usage());
+    if core.is_some() {
+        let cpu_len: usize = s.cpus().len();
+        let core_usize: usize = core.unwrap().parse::<usize>().unwrap();
 
-            if n_usize < cpu_len {
-                println!("{}", s.cpus()[n_usize].cpu_usage());
-            } else {
-                eprintln!("Select one of the 0..{} CPUs in your system, CPU {} doesn't exist!", cpu_len - 1, n_usize);
-            }
+        if core_usize < cpu_len {
+            println!("{}", s.cpus()[core_usize].cpu_usage());
+        } else {
+            eprintln!("CPU {} doesn't exist, you must pick one of your CPUs between 0 to {}", core_usize, cpu_len - 1);
         }
-        None=>{
-            println!("{}", s.cpus()[0].cpu_usage());
+    } else {
+        //prints average between all cpus
+        loop {
+            println!("{}", s.global_cpu_info().cpu_usage());
+            s.refresh_cpu_specifics(CpuRefreshKind::new().with_cpu_usage());
+            sleep(Duration::from_secs(1));
         }
     }
 }
