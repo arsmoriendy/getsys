@@ -27,22 +27,29 @@ fn cpu(core:Option<&String>) {
     use sysinfo::{System, SystemExt, CpuExt, CpuRefreshKind};
     let mut s = System::new();
     s.refresh_cpu_specifics(CpuRefreshKind::new().with_cpu_usage());
-    s.refresh_cpu_specifics(CpuRefreshKind::new().with_cpu_usage());
-    if core.is_some() {
-        let cpu_len: usize = s.cpus().len();
-        let core_usize: usize = core.unwrap().parse::<usize>().unwrap();
+    match core {
+        Some(c)=>{
+            let cpu_len: usize = s.cpus().len();
+            let core_usize: usize = c.parse::<usize>().unwrap();
 
-        if core_usize < cpu_len {
-            println!("{}", s.cpus()[core_usize].cpu_usage());
-        } else {
-            eprintln!("CPU {} doesn't exist, you must pick one of your CPUs between 0 to {}", core_usize, cpu_len - 1);
+            if core_usize < cpu_len {
+                //prints specific cpu
+                loop {
+                    println!("{}", s.global_cpu_info().cpu_usage());
+                    s.refresh_cpu_specifics(CpuRefreshKind::new().with_cpu_usage());
+                    sleep(Duration::from_secs(1));
+                }
+            } else {
+                eprintln!("CPU {} doesn't exist, you must pick one of your CPUs between 0 to {}", core_usize, cpu_len - 1);
+            }
         }
-    } else {
-        //prints average between all cpus
-        loop {
-            println!("{}", s.global_cpu_info().cpu_usage());
-            s.refresh_cpu_specifics(CpuRefreshKind::new().with_cpu_usage());
-            sleep(Duration::from_secs(1));
+        None=>{
+            //prints average between all cpus
+            loop {
+                println!("{}", s.global_cpu_info().cpu_usage());
+                s.refresh_cpu_specifics(CpuRefreshKind::new().with_cpu_usage());
+                sleep(Duration::from_secs(1));
+            }
         }
     }
 }
