@@ -15,7 +15,7 @@ fn main() {
     } else if args[0].len() > 2 {
       devs.push(args.remove(0))
     } else {
-      eprintln!("Invalid argument: '{}'", args.remove(0));
+      eprintln!("Invalid argument: \x1b[31m'{}'\x1b[0m, arguments should either be a \x1b[33mflag\x1b[0m or a \x1b[33mstring\x1b[0m 3 characters long that represents a device", args.remove(0));
       break
     }
   }
@@ -27,7 +27,7 @@ fn main() {
           cpu(Some(&dev[3..]))
         } else {cpu(None)}
       }
-      _=>eprintln!("Device: '{}' not supported.", dev)
+      _=>eprintln!("Device: \x1b[31m'{}'\x1b[0m not supported.", dev)
     }
   }
 }
@@ -42,7 +42,7 @@ fn cpu(core:Option<&str>) {
       let core_usize = c.parse::<usize>();
 
       fn argerr(cpu_len: usize) {
-        eprintln!("Pick one of your CPUs between 0 to {}", cpu_len);
+        eprintln!("You only have \x1b[33m{}\x1b[0m cpus, pick one of your cpus from \x1b[33m0..{}\x1b[0m", cpu_len, cpu_len - 1);
       }
 
       match core_usize {
