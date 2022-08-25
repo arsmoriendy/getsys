@@ -1,29 +1,38 @@
 use std::{env::args, thread::sleep, time::Duration, collections::HashMap};
 
 fn main() {
-  //Parse device and flag arguments
+  let mut args: Vec<String> = args().collect();
   let mut flags: HashMap<String, String> = HashMap::new();
   let mut devs: Vec<String> = vec![];
-  let mut args: Vec<String> = args().collect();
-  args.remove(0); //remove first argument
+
+  // Iterates through arguments
+  // Identifies wether it's a flag or a device
+  // Appends the argument to corresponding variable
+  args.remove(0); //removes first argument as it is the initial command
   while args.len() > 0 {
     if &args[0][0..1] == "-" {
       flags.insert(args.remove(0), args.remove(0));
-    } else {
+    } else if args[0].len() > 2 {
       devs.push(args.remove(0))
+    } else {
+      eprintln!("Invalid argument: '{}'", args.remove(0));
+      break
     }
   }
 
   for dev in devs {
-    let dev_str = dev.as_str();
-    match dev_str {
-      "cpu"=>cpu(flags.get("-c")),
-      _=>eprintln!("Device: '{}' not supported.", dev_str)
+    match &dev[0..3] {
+      "cpu"=>{
+        if dev.len() > 3 {
+          cpu(Some(&dev[3..]))
+        } else {cpu(None)}
+      }
+      _=>eprintln!("Device: '{}' not supported.", dev)
     }
   }
 }
 
-fn cpu(core:Option<&String>) {
+fn cpu(core:Option<&str>) {
   use sysinfo::{System, SystemExt, CpuExt, CpuRefreshKind};
   let mut s = System::new();
   s.refresh_cpu_specifics(CpuRefreshKind::new().with_cpu_usage());
