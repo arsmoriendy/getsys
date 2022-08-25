@@ -1,6 +1,9 @@
 use std::{env::args, thread::sleep, time::Duration, collections::HashMap};
+use sysinfo::{System, SystemExt, CpuExt, CpuRefreshKind};
 
 fn main() {
+  let mut s = System::new();
+
   let mut args: Vec<String> = args().collect();
   let mut flags: HashMap<String, String> = HashMap::new();
   let mut devs: Vec<String> = vec![];
@@ -24,17 +27,15 @@ fn main() {
     match &dev[0..3] {
       "cpu"=>{
         if dev.len() > 3 {
-          cpu(Some(&dev[3..]))
-        } else {cpu(None)}
+          cpu(&mut s, Some(&dev[3..]))
+        } else {cpu(&mut s, None)}
       }
       _=>eprintln!("Device: \x1b[31m'{}'\x1b[0m not supported.", dev)
     }
   }
 }
 
-fn cpu(core:Option<&str>) {
-  use sysinfo::{System, SystemExt, CpuExt, CpuRefreshKind};
-  let mut s = System::new();
+fn cpu(s: &mut System, core: Option<&str>) {
   s.refresh_cpu_specifics(CpuRefreshKind::new().with_cpu_usage());
   match core {
     Some(c)=>{
